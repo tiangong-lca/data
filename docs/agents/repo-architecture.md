@@ -27,8 +27,9 @@ checkPaths:
   - scripts/docpact
   - scripts/docpact-gate.sh
   - scripts/install-git-hooks.sh
-lastReviewedAt: 2026-06-21
-lastReviewedCommit: 1166585c6ada1d2665efcc2132fd5839b269cc75
+lastReviewedAt: 2026-09-13
+lastReviewedCommit: ec59ad560d9e0aabee1b3283dce3da827870fc11
+lastReviewedNote: "Reviewed for Data #31: active canonicalRepo is tiangong-lca/data. Dataset/schema/style payloads and archived release metadata remain unchanged; publish.yml remains a retired read-only notice. Governance validation is scoped to the sparse metadata checkout and does not claim full dataset clone verification."
 related:
   - AGENTS.md
   - .docpact/config.yaml
