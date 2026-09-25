@@ -30,8 +30,8 @@ checkPaths:
   - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
 lastReviewedAt: 2026-09-25
-lastReviewedCommit: 06afbd82ccf33346c449405aaaeb35c5fd61b2a3
-lastReviewedNote: "Reviewed for Data #39: Docpact's exact-source patched build changes only the local and manual CI governance tooling path. Repository ownership, dataset structure, reference assets, and release boundaries are unchanged."
+lastReviewedCommit: 166fffd22b1510bb580d2697fa248a236c01c47c
+lastReviewedNote: "Reviewed for Data #40: exact-head merged-PR qualification remains repository CI governance. It does not alter dataset ownership, payload structure, reference assets, release policy, or workspace integration ownership."
 related:
   - AGENTS.md
   - .docpact/config.yaml

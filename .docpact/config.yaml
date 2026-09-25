@@ -1,8 +1,8 @@
 version: 1
 layout: repo
 lastReviewedAt: 2026-09-25
-lastReviewedCommit: 06afbd82ccf33346c449405aaaeb35c5fd61b2a3
-lastReviewedNote: "Reviewed for Data #39: the local gate retains strict configuration validation and enforced full-diff lint. The manual fallback builds exact Docpact 0.1.9 source with a checksum-pinned stdin pathspec patch, preserving all governed data paths and merge-history counts. Dataset payload and release semantics are unchanged."
+lastReviewedCommit: 166fffd22b1510bb580d2697fa248a236c01c47c
+lastReviewedNote: "Reviewed for Data #40: the new trusted-main exact-merged-PR workflow and identity verifier are governed paths. It uses the existing checksum-pinned Docpact build for strict config and full original-diff lint; the separate status publisher does not execute candidate code. Dataset and release semantics are unchanged."
 
 catalog:
   repos:
@@ -29,6 +29,9 @@ ownership:
           - release_notes/**
           - .github/workflows/publish.yml
           - .github/workflows/ai-doc-lint.yml
+          - .github/workflows/attest-merged-pr.yml
+          - .github/scripts/attest_merged_pr.py
+          - .github/scripts/test_attest_merged_pr.py
       ownerRepo: data
     - id: dataset-payload
       paths:
@@ -75,9 +78,11 @@ coverage:
     - wechat.jpg
     - .github/workflows/publish.yml
     - .github/workflows/ai-doc-lint.yml
+    - .github/workflows/attest-merged-pr.yml
+    - .github/scripts/attest_merged_pr.py
+    - .github/scripts/test_attest_merged_pr.py
   exclude:
     - .git/**
-    - .github/scripts/**
     - .docpact/runs/**
 
 freshness:
@@ -119,6 +124,9 @@ routing:
         - release.json
         - .github/workflows/publish.yml
         - .github/workflows/ai-doc-lint.yml
+        - .github/workflows/attest-merged-pr.yml
+        - .github/scripts/attest_merged_pr.py
+        - .github/scripts/test_attest_merged_pr.py
     proof:
       paths:
         - docs/agents/repo-validation.md
@@ -283,3 +291,23 @@ rules:
       - path: docs/agents/repo-validation.md
         mode: review_or_update
     reason: Local push documentation governance gates must stay aligned with repo validation guidance and docpact configuration.
+  - id: data-exact-merged-pr-ci
+    scope: repo
+    repo: data
+    triggers:
+      - path: .github/workflows/attest-merged-pr.yml
+        kind: exact-head-automation
+      - path: .github/scripts/attest_merged_pr.py
+        kind: trusted-identity-verifier
+      - path: .github/scripts/test_attest_merged_pr.py
+        kind: verifier-tests
+    requiredDocs:
+      - path: AGENTS.md
+        mode: review_or_update
+      - path: .docpact/config.yaml
+        mode: review_or_update
+      - path: docs/agents/repo-validation.md
+        mode: review_or_update
+      - path: docs/agents/repo-architecture.md
+        mode: review_or_update
+    reason: A manually dispatched exact-head status must preserve the trusted-main, read-only validation and separate minimal-permission publishing boundary.

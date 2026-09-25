@@ -20,6 +20,9 @@ checkPaths:
   - .docpact/config.yaml
   - .github/workflows/publish.yml
   - .github/workflows/ai-doc-lint.yml
+  - .github/workflows/attest-merged-pr.yml
+  - .github/scripts/attest_merged_pr.py
+  - .github/scripts/test_attest_merged_pr.py
   - release.json
   - tiangong_lca_data/**
   - schemas/**
@@ -32,8 +35,8 @@ checkPaths:
   - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
 lastReviewedAt: 2026-09-25
-lastReviewedCommit: 06afbd82ccf33346c449405aaaeb35c5fd61b2a3
-lastReviewedNote: "Reviewed for Data #39: exact-source Docpact 0.1.9 plus the checksum-pinned stdin pathspec patch runs strict config validation and enforced full-diff lint over the complete data checkout. The manual fallback retains the local gate, and no dataset, schema, or release payload changes are implied."
+lastReviewedCommit: 166fffd22b1510bb580d2697fa248a236c01c47c
+lastReviewedNote: "Reviewed for Data #40: the manually dispatched exact-merged-PR workflow uses trusted-main identity verification, checksum-pinned Docpact, strict config validation, and enforced full original-diff lint. Its status-only publisher is isolated from candidate code. No data payload or release check is implied."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -62,6 +65,12 @@ scripts/docpact lint --root . --base origin/main --head HEAD --mode enforce
 ```
 
 The pinned build checks the Docpact 0.1.9 source commit, source-file and lockfile SHA-256 values, the reviewed patch SHA-256, and the patched source SHA-256. It runs the upstream Rust tests and a locked release build. The patch changes only the Git freshness query transport: all tracked paths go to one `git rev-list --stdin` invocation, retaining merge-history semantics while avoiding OS argument limits. A newline-containing path fails closed. The manual `ai-doc-lint` workflow delegates to the same local docpact gate with this binary when remote reproduction is needed; it does not add a baseline, waiver, or dataset exclusion.
+
+## Exact-Head Qualification for an Already Merged PR
+
+`.github/workflows/attest-merged-pr.yml` is a manual `workflow_dispatch` workflow on `main`. Supply the PR number and exact original `baseRefOid`, `headRefOid`, and `mergeCommit` SHA values from GitHub's PR record. The read-only job validates the merged same-repository PR and main target against GitHub GraphQL, checks out trusted main tooling and the historical head separately without persisted credentials, proves the original base is an ancestor of the head and the merge commit is reachable from the dispatched main commit, then runs the trusted checksum-pinned Docpact binary directly against that exact base/head diff. It validates strict config and uses enforced lint without a baseline, waiver, narrowed file set, or candidate-provided script. For Data PR #38, it also checks the retained Source against the trusted-main Source XSD with a SHA-256-verified W3C XML import and offline XML parsing, and confirms the incorrect Process file is absent.
+
+Only after every validation step succeeds does a separate `statuses: write` job run. It performs a fresh public PR identity read, never checks out or executes historical code, and posts `data/merged-pr-exact-docpact` SUCCESS to the exact head with a link to the validating run. This context attests the listed checks only; scientific acceptance, platform operations, and workspace integration remain separately governed. Review the run, posted commit status, and target PR's status rollup after dispatch. The workflow is not automatic PR CI and does not justify bypassing failed checks.
 
 ## Future Automation
 
