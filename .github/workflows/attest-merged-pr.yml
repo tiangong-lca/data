@@ -1,0 +1,194 @@
+name: attest-merged-pr-exact-head
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Same-repository merged PR number targeting main.
+        required: true
+        type: string
+      expected_base:
+        description: Original PR baseRefOid (40 lowercase hex characters).
+        required: true
+        type: string
+      expected_head:
+        description: Exact PR headRefOid to validate and attest.
+        required: true
+        type: string
+      expected_merge:
+        description: Exact mergeCommit OID reachable from main.
+        required: true
+        type: string
+
+# The verification job never receives a write permission. The publisher never
+# checks out or runs the historical PR head.
+permissions: {}
+
+jobs:
+  verify:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.repository == 'tiangong-lca/data'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      pr: ${{ steps.identity.outputs.pr }}
+      base: ${{ steps.identity.outputs.base }}
+      head: ${{ steps.identity.outputs.head }}
+      merge: ${{ steps.identity.outputs.merge }}
+    steps:
+      - name: Check out trusted main tooling
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: trusted
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Test trusted identity verifier
+        run: python3 -m unittest discover -s trusted/.github/scripts -p 'test_attest_merged_pr.py' -v
+
+      - name: Verify merged PR identity against GitHub GraphQL
+        id: identity
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          EXPECTED_BASE: ${{ inputs.expected_base }}
+          EXPECTED_HEAD: ${{ inputs.expected_head }}
+          EXPECTED_MERGE: ${{ inputs.expected_merge }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 trusted/.github/scripts/attest_merged_pr.py
+
+      - name: Check out the exact historical PR head as data only
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ steps.identity.outputs.head }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove checked-out identities and original ancestry
+        env:
+          VERIFIED_BASE: ${{ steps.identity.outputs.base }}
+          VERIFIED_HEAD: ${{ steps.identity.outputs.head }}
+          VERIFIED_MERGE: ${{ steps.identity.outputs.merge }}
+        run: |
+          set -euo pipefail
+          test "$(git -C trusted rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C candidate rev-parse HEAD)" = "$VERIFIED_HEAD"
+          git -C candidate merge-base --is-ancestor "$VERIFIED_BASE" "$VERIFIED_HEAD"
+          git -C trusted merge-base --is-ancestor "$VERIFIED_MERGE" "$GITHUB_SHA"
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build checksum-pinned corrected Docpact from trusted main
+        id: docpact
+        run: |
+          set -euo pipefail
+          docpact_bin="$(trusted/scripts/build-docpact-0.1.9.sh)"
+          echo "bin=$docpact_bin" >> "$GITHUB_OUTPUT"
+
+      - name: Validate strict config and complete original PR diff
+        env:
+          DOCPACT_BIN: ${{ steps.docpact.outputs.bin }}
+          VERIFIED_BASE: ${{ steps.identity.outputs.base }}
+          VERIFIED_HEAD: ${{ steps.identity.outputs.head }}
+        run: |
+          set -euo pipefail
+          "$DOCPACT_BIN" validate-config --root "$GITHUB_WORKSPACE/candidate" --strict
+          "$DOCPACT_BIN" lint --root "$GITHUB_WORKSPACE/candidate" \
+            --base "$VERIFIED_BASE" --head "$VERIFIED_HEAD" --mode enforce \
+            --output "$RUNNER_TEMP/docpact-exact-head.json"
+
+      - name: Recheck Data PR 38 Source structure and retired Process
+        if: inputs.pr_number == '38'
+        run: |
+          set -euo pipefail
+          if ! command -v xmllint >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq libxml2-utils
+          fi
+          # The bundled schema imports W3C xml.xsd. Map that one import to a
+          # checksum-verified copy so the candidate XML is parsed with --nonet.
+          curl --fail-with-body -sSL --retry 3 --max-time 30 \
+            -o "$RUNNER_TEMP/xml.xsd" https://www.w3.org/2001/xml.xsd
+          echo "61960fb3131e38022caad5360e2f33a3382578ab3c80cd58bd74320ede61b20c  $RUNNER_TEMP/xml.xsd" \
+            | sha256sum --check --status
+          cat > "$RUNNER_TEMP/xml-catalog.xml" <<EOF
+          <catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+            <uri name="http://www.w3.org/2001/xml.xsd" uri="file://$RUNNER_TEMP/xml.xsd"/>
+          </catalog>
+          EOF
+          XML_CATALOG_FILES="$RUNNER_TEMP/xml-catalog.xml" \
+            xmllint --nonet --noout --schema trusted/schemas/ILCD_SourceDataSet.xsd \
+            candidate/tiangong_lca_data/sources/4bc9807c-8f71-409d-91a0-b6e84199aa78.xml
+          test ! -e candidate/tiangong_lca_data/processes/a87288f0-8b94-417d-9045-c752719172f2.xml
+
+  publish:
+    needs: verify
+    if: >-
+      needs.verify.result == 'success' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.repository == 'tiangong-lca/data'
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    steps:
+      - name: Fresh PR readback, then post exact-head success status
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+          EXPECTED_BASE: ${{ inputs.expected_base }}
+          EXPECTED_HEAD: ${{ inputs.expected_head }}
+          EXPECTED_MERGE: ${{ inputs.expected_merge }}
+          VERIFIED_PR: ${{ needs.verify.outputs.pr }}
+          VERIFIED_BASE: ${{ needs.verify.outputs.base }}
+          VERIFIED_HEAD: ${{ needs.verify.outputs.head }}
+          VERIFIED_MERGE: ${{ needs.verify.outputs.merge }}
+          STATUS_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]
+          [[ "$EXPECTED_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EXPECTED_BASE" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EXPECTED_MERGE" =~ ^[0-9a-f]{40}$ ]]
+          test "$PR_NUMBER" = "$VERIFIED_PR"
+          test "$EXPECTED_BASE" = "$VERIFIED_BASE"
+          test "$EXPECTED_HEAD" = "$VERIFIED_HEAD"
+          test "$EXPECTED_MERGE" = "$VERIFIED_MERGE"
+
+          # Read public PR state without granting pull-requests:read to this job.
+          pr_json="$(curl --fail-with-body -sS --retry 3 --max-time 30 \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/tiangong-lca/data/pulls/$PR_NUMBER")"
+          jq -e --argjson number "$PR_NUMBER" --arg base "$VERIFIED_BASE" \
+            --arg head "$VERIFIED_HEAD" \
+            --arg merge "$VERIFIED_MERGE" '
+              .number == $number and .state == "closed" and .merged == true and
+              .base.ref == "main" and .base.sha == $base and
+              .base.repo.full_name == "tiangong-lca/data" and
+              .head.repo.full_name == "tiangong-lca/data" and
+              .head.sha == $head and .merge_commit_sha == $merge
+            ' <<< "$pr_json" > /dev/null
+
+          context='data/merged-pr-exact-docpact'
+          target_url="https://github.com/tiangong-lca/data/actions/runs/$GITHUB_RUN_ID"
+          description='Strict Docpact config and complete original PR diff passed'
+          payload="$(jq -cn --arg context "$context" --arg target_url "$target_url" \
+            --arg description "$description" \
+            '{state:"success",context:$context,target_url:$target_url,description:$description}')"
+          status_json="$(curl --fail-with-body -sS --max-time 30 \
+            -X POST -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $STATUS_TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data "$payload" \
+            "https://api.github.com/repos/tiangong-lca/data/statuses/$VERIFIED_HEAD")"
+          jq -e --arg context "$context" --arg target_url "$target_url" \
+            --arg description "$description" '
+              .state == "success" and .context == $context and
+              .target_url == $target_url and .description == $description
+            ' <<< "$status_json" > /dev/null
+          echo "Exact-head status posted: PR #$PR_NUMBER head=$VERIFIED_HEAD context=$context run=$target_url"
