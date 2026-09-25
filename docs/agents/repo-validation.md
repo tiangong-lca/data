@@ -29,9 +29,9 @@ checkPaths:
   - scripts/docpact
   - scripts/docpact-gate.sh
   - scripts/install-git-hooks.sh
-lastReviewedAt: 2026-09-13
-lastReviewedCommit: ec59ad560d9e0aabee1b3283dce3da827870fc11
-lastReviewedNote: "Reviewed for Data #31: active canonicalRepo is tiangong-lca/data. Dataset/schema/style payloads and archived release metadata remain unchanged; publish.yml remains a retired read-only notice. Governance validation is scoped to the sparse metadata checkout and does not claim full dataset clone verification."
+lastReviewedAt: 2026-09-25
+lastReviewedCommit: 2e163304adb9357cd7a17facfc8e5b426ed74a93
+lastReviewedNote: "Reviewed for Data #33 option A against exact origin/main: the user selected retirement of the unsupported active mine-water Process and retention of a separate historical Source for the unverified April 2019 draft-mirror row. XSD and public Toolkit 0.3.3 Source-only import/roundtrip passed with both languages retained. Shared Source 08a0183e remains unchanged for Data #35; mirror authenticity, LCDN/Platform disposition, Data PR and root integration are not claimed."
 related:
   - AGENTS.md
   - .docpact/config.yaml

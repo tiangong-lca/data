@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet version="1.0" href="../../stylesheets/source2html.xsl" type="text/xsl"?>
+<sourceDataSet xmlns:common="http://lca.jrc.it/ILCD/Common" xmlns="http://lca.jrc.it/ILCD/Source" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.1" xsi:schemaLocation="http://lca.jrc.it/ILCD/Source ../../schemas/ILCD_SourceDataSet.xsd">
+	<sourceInformation>
+		<dataSetInformation>
+			<common:UUID>4bc9807c-8f71-409d-91a0-b6e84199aa78</common:UUID>
+			<common:shortName xml:lang="en">Third-party mirror of the April 2019 draft coal-mining pollution coefficient manual; authenticity unverified</common:shortName>
+			<common:shortName xml:lang="zh">2019年4月煤炭开采产排污系数手册初稿的第三方镜像；真实性未核</common:shortName>
+			<classificationInformation>
+				<common:classification>
+					<common:class level="0">Publications and communications</common:class>
+				</common:classification>
+			</classificationInformation>
+			<sourceCitation>Second National Pollution Source Census coefficient manual, chapter 06, coal mining and washing, April 2019 draft mirror indexed at https://eia543.com/archives/4996; official original and edition identity unverified.</sourceCitation>
+			<publicationType>Other unpublished and grey literature</publicationType>
+			<sourceDescriptionOrComment xml:lang="en">Historical source evidence only. The third-party April 2019 draft mirror has PDF SHA-256 bf0342869a978ec90473aef0247e8bfffc735a58713d0655f9901fc5fee0dcee. The target row is on PDF p.16 / printed p.15: bituminous and anthracite coal, surface mining, annual raw-coal output greater than or equal to 1.2 million t, high-water mining area. The output threshold selects the row; it is not measured site production. Per 1 t unwashed raw coal, its five original coefficients are industrial wastewater 1.8 t (check-only, not measured discharge), chemical oxygen demand generation 300 g, petroleum indicator generation 8 g, mercury generation 3.68 mg, and arsenic generation 11.2 mg. The row reports treatment efficiencies of 85% for physical COD treatment, 85% for chemical petroleum treatment, and 83% for chemical mercury and arsenic treatment. The conditional discharge formula is generation coefficient × (1 - efficiency × k) × (1 - r), where k is normal treatment operating days per year divided by normal enterprise production days per year, and r is the wastewater reuse fraction. Actual k and r are unknown. Former Process a87288f0-8b94-417d-9045-c752719172f2, version 00.01.005 at Git commit 2e163304adb9357cd7a17facfc8e5b426ed74a93, contains values numerically consistent with this third-party row but presented them as a mine-water treatment-plant life cycle inventory without authenticated source or site evidence. It had no established reference treatment service, site production, energy or chemical inputs, residues, or verified exchange mapping; its 1000 kg Standard coal input confused the activity denominator with fuel, and its 1800 Waste water output referenced a missing Flow. That Process is retired from the active XML dataset; its original file remains in Git history. This Source is not a replacement Process, an approved site inventory, or a current coefficient. The official 2019 original and the relation of this draft mirror to the inherited “trial edition” label remain unverified; the official 2021 high-water row differs. Shared Source 08a0183e-84e8-456a-a7d4-83ea1ab0bacb is unchanged pending separate Data #35 review.</sourceDescriptionOrComment>
+			<sourceDescriptionOrComment xml:lang="zh">仅作历史来源证据。第三方2019年4月初稿镜像的PDF SHA-256为bf0342869a978ec90473aef0247e8bfffc735a58713d0655f9901fc5fee0dcee。目标行见PDF第16页／印刷第15页：烟煤和无烟煤露天开采、原煤年产量大于等于120万吨、高富水矿区。产量阈值只用于选行，并非现场实测产量。以每1吨未经洗选的原煤为分母，五项原始系数分别为工业废水量1.8吨（仅供校核，不是实测排放）、化学需氧量产生量300克、石油类产生量8克、汞产生量3.68毫克、砷产生量11.2毫克。该行记载的治理效率分别为化学需氧量物理法85%、石油类化学法85%、汞和砷化学法83%。条件性排放计算式为产生系数×（1－治理效率×k）×（1－r）；k为治理设施正常运行天数（天/年）与企业正常生产天数（天/年）之比，r为废水回用率。现场实际k和r均未知。原Process a87288f0-8b94-417d-9045-c752719172f2在Git提交2e163304adb9357cd7a17facfc8e5b426ed74a93中的版本为00.01.005，其数值与这份第三方目标行吻合，但在来源身份和现场证据未核实的情况下呈现为矿井水处理站生命周期清单；它缺乏已确立的参考处理服务量、现场产量、能源和药剂投入、残余物以及经过核验的交换映射。原1000千克标准煤输入误把活动分母当作燃料，原1800废水输出引用了缺失的Flow。该Process已从活跃XML数据集中撤出，原始文件保留在Git历史中。本Source不是替代Process、获批准的现场清单或现行系数。2019年官方原件及此初稿镜像与旧称“试用版”的关系尚未核实；2021年官方版高富水目标行的系数不同。共享Source 08a0183e-84e8-456a-a7d4-83ea1ab0bacb保持原样，待Data #35另行审查。</sourceDescriptionOrComment>
+		</dataSetInformation>
+	</sourceInformation>
+	<administrativeInformation>
+		<publicationAndOwnership>
+			<common:dataSetVersion>01.00.000</common:dataSetVersion>
+		</publicationAndOwnership>
+	</administrativeInformation>
+</sourceDataSet>
