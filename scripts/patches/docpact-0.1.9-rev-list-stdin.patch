@@ -1,0 +1,143 @@
+diff --git a/src/git/mod.rs b/src/git/mod.rs
+index 961817f..1f8ef26 100644
+--- a/src/git/mod.rs
++++ b/src/git/mod.rs
+@@ -2,0 +3 @@ use std::fs;
++use std::io::Write;
+@@ -4 +5 @@ use std::path::Path;
+-use std::process::Command;
++use std::process::{Command, Stdio};
+@@ -111,6 +112,6 @@ pub fn get_unique_commits_since(
+-    let mut args = vec![
+-        "rev-list".to_string(),
+-        format!("{base_commit}..HEAD"),
+-        "--".to_string(),
+-    ];
+-    args.extend(paths.iter().cloned());
++    // rev-list accepts pathspecs on stdin after "--". Keep all paths in one
++    // invocation: separate path-limited walks cannot be unioned safely because
++    // Git's merge-history simplification depends on the complete pathspec.
++    if paths.iter().any(|path| path.contains(['\n', '\r'])) {
++        bail!("git rev-list --stdin cannot represent a path containing a newline");
++    }
+@@ -118,2 +119,3 @@ pub fn get_unique_commits_since(
+-    let output = Command::new("git")
+-        .args(args.iter().map(String::as_str))
++    let revision_range = format!("{base_commit}..HEAD");
++    let mut child = Command::new("git")
++        .args(["rev-list", &revision_range, "--stdin"])
+@@ -121 +123,4 @@ pub fn get_unique_commits_since(
+-        .output()
++        .stdin(Stdio::piped())
++        .stdout(Stdio::piped())
++        .stderr(Stdio::piped())
++        .spawn()
+@@ -123,0 +129,14 @@ pub fn get_unique_commits_since(
++    {
++        let mut stdin = child
++            .stdin
++            .take()
++            .ok_or_else(|| miette!("git rev-list stdin was unavailable"))?;
++        stdin.write_all(b"--\n").into_diagnostic()?;
++        for path in paths {
++            stdin.write_all(path.as_bytes()).into_diagnostic()?;
++            stdin.write_all(b"\n").into_diagnostic()?;
++        }
++    }
++
++    let output = child.wait_with_output().into_diagnostic()?;
++
+@@ -276,0 +296,93 @@ fn dedup(values: Vec<String>) -> Vec<String> {
++
++#[cfg(test)]
++mod tests {
++    use std::fs;
++    use std::path::{Path, PathBuf};
++    use std::process::Command;
++    use std::time::{SystemTime, UNIX_EPOCH};
++
++    use super::get_unique_commits_since;
++
++    fn git(root: &Path, args: &[&str]) -> String {
++        let output = Command::new("git")
++            .args(args)
++            .current_dir(root)
++            .output()
++            .expect("git should run");
++        assert!(
++            output.status.success(),
++            "git {:?} failed: {}",
++            args,
++            String::from_utf8_lossy(&output.stderr)
++        );
++        String::from_utf8(output.stdout)
++            .expect("git output should be UTF-8")
++            .trim()
++            .to_string()
++    }
++
++    fn temp_repo() -> PathBuf {
++        let nanos = SystemTime::now()
++            .duration_since(UNIX_EPOCH)
++            .expect("system clock should be valid")
++            .as_nanos();
++        let root =
++            std::env::temp_dir().join(format!("docpact-git-stdin-{}-{nanos}", std::process::id()));
++        fs::create_dir_all(&root).expect("create temporary repository");
++        git(&root, &["init", "--quiet", "-b", "main"]);
++        git(&root, &["config", "user.email", "docpact@example.com"]);
++        git(&root, &["config", "user.name", "Docpact Tests"]);
++        root
++    }
++
++    #[test]
++    fn unique_commits_keep_merge_history_with_large_path_input() {
++        let root = temp_repo();
++        fs::write(root.join("a.txt"), "base\n").expect("write a");
++        fs::write(root.join("b.txt"), "base\n").expect("write b");
++        git(&root, &["add", "a.txt", "b.txt"]);
++        git(&root, &["commit", "--quiet", "-m", "base"]);
++        let base = git(&root, &["rev-parse", "HEAD"]);
++
++        git(&root, &["checkout", "--quiet", "-b", "side"]);
++        fs::write(root.join("b.txt"), "side\n").expect("update b");
++        git(&root, &["commit", "--quiet", "-am", "side changes b"]);
++        git(&root, &["checkout", "--quiet", "main"]);
++        fs::write(root.join("a.txt"), "main\n").expect("update a");
++        git(&root, &["commit", "--quiet", "-am", "main changes a"]);
++        git(
++            &root,
++            &["merge", "--no-ff", "--quiet", "-m", "merge side", "side"],
++        );
++
++        // Enough input to exceed common OS argument-size limits. The paths
++        // between a and b also force them into different batches in any
++        // byte-bounded fallback, which would incorrectly omit the merge.
++        let mut paths = vec!["a.txt".to_string()];
++        paths.extend((0..30_000).map(|index| format!("missing/{index:05}/{}", "x".repeat(128))));
++        paths.push("b.txt".to_string());
++
++        let actual = get_unique_commits_since(&root, &base, &paths).expect("count commits");
++        let expected = git(
++            &root,
++            &["rev-list", &format!("{base}..HEAD"), "--", "a.txt", "b.txt"],
++        );
++        assert_eq!(actual.len(), 3);
++        assert_eq!(actual.join("\n"), expected);
++        assert!(
++            get_unique_commits_since(&root, &base, &[])
++                .expect("empty path set")
++                .is_empty()
++        );
++        fs::remove_dir_all(root).expect("remove temporary repository");
++    }
++
++    #[test]
++    fn newline_path_fails_closed() {
++        let root = temp_repo();
++        let error = get_unique_commits_since(&root, "HEAD", &["a\n--all".to_string()])
++            .expect_err("newlines cannot be encoded safely for git --stdin");
++        assert!(error.to_string().contains("newline"));
++        fs::remove_dir_all(root).expect("remove temporary repository");
++    }
++}

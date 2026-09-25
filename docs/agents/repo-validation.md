@@ -28,10 +28,12 @@ checkPaths:
   - .githooks/pre-push
   - scripts/docpact
   - scripts/docpact-gate.sh
+  - scripts/build-docpact-0.1.9.sh
+  - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
 lastReviewedAt: 2026-09-25
-lastReviewedCommit: 2e163304adb9357cd7a17facfc8e5b426ed74a93
-lastReviewedNote: "Reviewed for Data #33 option A against exact origin/main: the user selected retirement of the unsupported active mine-water Process and retention of a separate historical Source for the unverified April 2019 draft-mirror row. XSD and public Toolkit 0.3.3 Source-only import/roundtrip passed with both languages retained. Shared Source 08a0183e remains unchanged for Data #35; mirror authenticity, LCDN/Platform disposition, Data PR and root integration are not claimed."
+lastReviewedCommit: 06afbd82ccf33346c449405aaaeb35c5fd61b2a3
+lastReviewedNote: "Reviewed for Data #39: exact-source Docpact 0.1.9 plus the checksum-pinned stdin pathspec patch runs strict config validation and enforced full-diff lint over the complete data checkout. The manual fallback retains the local gate, and no dataset, schema, or release payload changes are implied."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -54,11 +56,12 @@ This repository is content-oriented and does not currently define a single check
 Run these commands for governance changes:
 
 ```bash
+export DOCPACT_BIN="$(scripts/build-docpact-0.1.9.sh)"
 scripts/docpact validate-config --root . --strict
 scripts/docpact lint --root . --base origin/main --head HEAD --mode enforce
 ```
 
-The manual `ai-doc-lint` workflow delegates to the same local docpact gate when remote reproduction is needed.
+The pinned build checks the Docpact 0.1.9 source commit, source-file and lockfile SHA-256 values, the reviewed patch SHA-256, and the patched source SHA-256. It runs the upstream Rust tests and a locked release build. The patch changes only the Git freshness query transport: all tracked paths go to one `git rev-list --stdin` invocation, retaining merge-history semantics while avoiding OS argument limits. A newline-containing path fails closed. The manual `ai-doc-lint` workflow delegates to the same local docpact gate with this binary when remote reproduction is needed; it does not add a baseline, waiver, or dataset exclusion.
 
 ## Future Automation
 
@@ -73,3 +76,5 @@ Install the versioned local hook once per checkout:
 ```
 
 The `pre-push` hook runs `scripts/docpact-gate.sh`, which delegates CLI lookup to `scripts/docpact` and performs strict config validation plus enforced lint before the push leaves the machine. The wrapper checks `DOCPACT_BIN`, Cargo install locations, Homebrew install locations, and then `PATH`, so local agent shells should not fail only because bare `docpact` is unavailable. The default comparison base is `origin/main`. Override it for unusual stacks with `DOCPACT_BASE_REF=<ref>` or `scripts/docpact-gate.sh --base <ref>`. The gate writes its detailed report to a temporary file so normal pushes do not create `.docpact/runs/` artifacts.
+
+For this large repository, export the binary path emitted by `scripts/build-docpact-0.1.9.sh` before any local push; stock 0.1.9 can otherwise fail with E2BIG during freshness evaluation. The build directory is outside the checkout and remains available for the shell's later gate invocations.

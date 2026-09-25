@@ -27,13 +27,16 @@ checkPaths:
   - tiangong_lca_data/**
   - wechat.jpg
   - .github/workflows/publish.yml
+  - .github/workflows/ai-doc-lint.yml
   - .githooks/**
   - scripts/docpact
   - scripts/docpact-gate.sh
+  - scripts/build-docpact-0.1.9.sh
+  - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
 lastReviewedAt: 2026-09-25
-lastReviewedCommit: 2e163304adb9357cd7a17facfc8e5b426ed74a93
-lastReviewedNote: "Reviewed for Data #33 option A against exact origin/main: the user selected retirement of the unsupported active mine-water Process and retention of a separate historical Source for the unverified April 2019 draft-mirror row. XSD and public Toolkit 0.3.3 Source-only import/roundtrip passed with both languages retained. Shared Source 08a0183e remains unchanged for Data #35; mirror authenticity, LCDN/Platform disposition, Data PR and root integration are not claimed."
+lastReviewedCommit: 06afbd82ccf33346c449405aaaeb35c5fd61b2a3
+lastReviewedNote: "Reviewed for Data #39: the local gate retains strict configuration validation and enforced full-diff lint. The manual fallback builds exact Docpact 0.1.9 source with a checksum-pinned stdin pathspec patch, preserving all governed data paths and merge-history counts. Dataset payload and release semantics are unchanged."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
@@ -122,3 +125,12 @@ Install the versioned local hook once per checkout:
 ```
 
 The `pre-push` hook runs `scripts/docpact-gate.sh`, which delegates CLI lookup to `scripts/docpact` and performs strict config validation plus enforced lint before the push leaves the machine. The wrapper checks `DOCPACT_BIN`, Cargo install locations, Homebrew install locations, and then `PATH`, so local agent shells should not fail only because bare `docpact` is unavailable. The default comparison base is `origin/main`. Override it for unusual stacks with `DOCPACT_BASE_REF=<ref>` or `scripts/docpact-gate.sh --base <ref>`. The gate writes its detailed report to a temporary file so normal pushes do not create `.docpact/runs/` artifacts.
+
+The full dataset exceeds the OS argument limit in the published Docpact 0.1.9 Git freshness query. Build the exact-source, checksum-verified 0.1.9 patch once per local shell and export its path before running the gate or pushing:
+
+```bash
+export DOCPACT_BIN="$(scripts/build-docpact-0.1.9.sh)"
+scripts/docpact-gate.sh --base origin/main
+```
+
+The manual `ai-doc-lint` fallback uses that same build and gate. The patch sends the complete path set to one Git history query through stdin; it does not narrow dataset coverage or skip any governance finding.

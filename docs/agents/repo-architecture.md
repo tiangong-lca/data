@@ -26,10 +26,12 @@ checkPaths:
   - .githooks/pre-push
   - scripts/docpact
   - scripts/docpact-gate.sh
+  - scripts/build-docpact-0.1.9.sh
+  - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
 lastReviewedAt: 2026-09-25
-lastReviewedCommit: 2e163304adb9357cd7a17facfc8e5b426ed74a93
-lastReviewedNote: "Reviewed for Data #33 option A against exact origin/main: the user selected retirement of the unsupported active mine-water Process and retention of a separate historical Source for the unverified April 2019 draft-mirror row. XSD and public Toolkit 0.3.3 Source-only import/roundtrip passed with both languages retained. Shared Source 08a0183e remains unchanged for Data #35; mirror authenticity, LCDN/Platform disposition, Data PR and root integration are not claimed."
+lastReviewedCommit: 06afbd82ccf33346c449405aaaeb35c5fd61b2a3
+lastReviewedNote: "Reviewed for Data #39: Docpact's exact-source patched build changes only the local and manual CI governance tooling path. Repository ownership, dataset structure, reference assets, and release boundaries are unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -71,3 +73,5 @@ A merged PR in this repository is repo-complete only. If the dataset snapshot mu
 ## Local Docpact Push Gate
 
 This repository has a versioned local `pre-push` hook under `.githooks/pre-push` that delegates to `scripts/docpact-gate.sh`. The gate resolves the CLI through `scripts/docpact`, so local agent shells do not need bare `docpact` on `PATH`. The hook is a local developer guard for docpact config validation and enforced doc-governance linting; ordinary PRs and pushes rely on the local gate; `.github/workflows/ai-doc-lint.yml` is manual-dispatch fallback for remote reproduction.
+
+The temporary Docpact 0.1.9 build patch is governance tooling only. It does not change data package content or the retired release workflow.
