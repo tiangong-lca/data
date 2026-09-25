@@ -27,8 +27,10 @@ jobs:
       - name: Install stable Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install docpact
-        run: cargo install docpact --version 0.1.9 --force
+      - name: Build pinned Docpact with full-path Git history support
+        run: |
+          docpact_bin="$(scripts/build-docpact-0.1.9.sh)"
+          echo "DOCPACT_BIN=$docpact_bin" >> "$GITHUB_ENV"
 
       - name: Run local docpact gate
         env:

@@ -1,8 +1,8 @@
 version: 1
 layout: repo
 lastReviewedAt: 2026-09-25
-lastReviewedCommit: 2e163304adb9357cd7a17facfc8e5b426ed74a93
-lastReviewedNote: "Reviewed for Data #33 option A against exact origin/main: the user selected retirement of the unsupported active mine-water Process and retention of a separate historical Source for the unverified April 2019 draft-mirror row. XSD and public Toolkit 0.3.3 Source-only import/roundtrip passed with both languages retained. Shared Source 08a0183e remains unchanged for Data #35; mirror authenticity, LCDN/Platform disposition, Data PR and root integration are not claimed."
+lastReviewedCommit: 06afbd82ccf33346c449405aaaeb35c5fd61b2a3
+lastReviewedNote: "Reviewed for Data #39: the local gate retains strict configuration validation and enforced full-diff lint. The manual fallback builds exact Docpact 0.1.9 source with a checksum-pinned stdin pathspec patch, preserving all governed data paths and merge-history counts. Dataset payload and release semantics are unchanged."
 
 catalog:
   repos:
@@ -49,6 +49,8 @@ ownership:
           - .githooks/**
           - scripts/docpact
           - scripts/docpact-gate.sh
+          - scripts/build-docpact-0.1.9.sh
+          - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
           - scripts/install-git-hooks.sh
       ownerRepo: data
 
@@ -57,6 +59,8 @@ coverage:
     - .githooks/**
     - scripts/docpact
     - scripts/docpact-gate.sh
+    - scripts/build-docpact-0.1.9.sh
+    - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
     - scripts/install-git-hooks.sh
     - AGENTS.md
     - README.md
@@ -88,6 +92,8 @@ routing:
         - .githooks/pre-push
         - scripts/docpact
         - scripts/docpact-gate.sh
+        - scripts/build-docpact-0.1.9.sh
+        - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
         - scripts/install-git-hooks.sh
     dataset-content:
       paths:
@@ -264,6 +270,10 @@ rules:
       - path: scripts/docpact
         kind: local-automation
       - path: scripts/docpact-gate.sh
+        kind: local-automation
+      - path: scripts/build-docpact-0.1.9.sh
+        kind: local-automation
+      - path: scripts/patches/docpact-0.1.9-rev-list-stdin.patch
         kind: local-automation
       - path: scripts/install-git-hooks.sh
         kind: local-automation
