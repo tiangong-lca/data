@@ -33,7 +33,7 @@ checkPaths:
   - scripts/install-git-hooks.sh
 lastReviewedAt: 2026-09-25
 lastReviewedCommit: 2e163304adb9357cd7a17facfc8e5b426ed74a93
-lastReviewedNote: "Reviewed the local Data #33 retirement candidate against exact origin/main: the unsupported mine-water Process is removed from active XML, while a new, separate Source preserves the unverified April 2019 draft-mirror row and its limits. XSD and published Toolkit 0.3.3 Source-only import and validation passed with both languages retained. Shared Source 08a0183e remains unchanged for Data #35; scientific approval, platform withdrawal, PR and workspace integration are not claimed."
+lastReviewedNote: "Reviewed for Data #33 option A against exact origin/main: the user selected retirement of the unsupported active mine-water Process and retention of a separate historical Source for the unverified April 2019 draft-mirror row. XSD and public Toolkit 0.3.3 Source-only import/roundtrip passed with both languages retained. Shared Source 08a0183e remains unchanged for Data #35; mirror authenticity, LCDN/Platform disposition, Data PR and root integration are not claimed."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
