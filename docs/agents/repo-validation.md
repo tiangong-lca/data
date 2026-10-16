@@ -34,9 +34,9 @@ checkPaths:
   - scripts/build-docpact-0.1.9.sh
   - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
-lastReviewedAt: 2026-09-25
-lastReviewedCommit: 166fffd22b1510bb580d2697fa248a236c01c47c
-lastReviewedNote: "Reviewed for Data #40: the manually dispatched exact-merged-PR workflow uses trusted-main identity verification, checksum-pinned Docpact, strict config validation, and enforced full original-diff lint. Its status-only publisher is isolated from candidate code. No data payload or release check is implied."
+lastReviewedAt: 2026-10-16
+lastReviewedCommit: c50cab7961e0b0ca11c26a600bd4c90fea6c6c32
+lastReviewedNote: "Reviewed Data #43: Actions-only monitoring adds scoped read-only workflow lint and existing identity-verifier tests; exact merged-PR attestation, dataset/reference assets, digests, release retirement and integration requirements remain unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -75,6 +75,10 @@ Only after every validation step succeeds does a separate `statuses: write` job 
 ## Future Automation
 
 If this repository gains a canonical data validation wrapper later, update this file, `AGENTS.md`, and `.docpact/config.yaml` in the same change. The current publish workflow is a retired release notice, not release automation or a general data validation wrapper.
+
+## Dependency Workflow PR Checks
+
+`.github/workflows/dependency-pr.yml` is scoped to main-target automation/configuration PRs and manual validation. It runs checksum-pinned actionlint over workflow definitions and the existing identity-verifier unit tests with read-only repository permission. It does not invoke the manual attestation workflow or its status publisher, regenerate data, or qualify scientific content. Monitoring, local commands and tool-update requirements live in [dependency-updates.md](dependency-updates.md).
 
 ## Local Docpact Push Gate
 

@@ -29,6 +29,8 @@ checkPaths:
   - .github/workflows/publish.yml
   - .github/workflows/ai-doc-lint.yml
   - .github/workflows/attest-merged-pr.yml
+  - .github/workflows/dependency-pr.yml
+  - .github/dependabot.yml
   - .github/scripts/attest_merged_pr.py
   - .github/scripts/test_attest_merged_pr.py
   - .githooks/**
@@ -37,9 +39,9 @@ checkPaths:
   - scripts/build-docpact-0.1.9.sh
   - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
-lastReviewedAt: 2026-09-25
-lastReviewedCommit: 166fffd22b1510bb580d2697fa248a236c01c47c
-lastReviewedNote: "Reviewed for Data #40: a manual exact-merged-PR workflow validates original PR identities and full Docpact diff from trusted main before a separate status-only job can attest the exact head. This is a qualification path, not an automatic data or release workflow."
+lastReviewedAt: 2026-10-16
+lastReviewedCommit: c50cab7961e0b0ca11c26a600bd4c90fea6c6c32
+lastReviewedNote: "Reviewed Data #43: Actions-only monitoring adds scoped read-only workflow lint and existing identity-verifier tests; exact merged-PR attestation, dataset/reference assets, digests, release retirement and integration requirements remain unchanged."
 related:
   - .docpact/config.yaml
   - docs/agents/repo-architecture.md
@@ -102,6 +104,7 @@ Route those tasks to:
 - `.github/workflows/publish.yml` is intentionally a retired notice workflow. It must not create tags, archives, GitHub Releases, or release assets.
 - Repo-local documentation governance is encoded in `.docpact/config.yaml` and enforced locally by the pre-push docpact gate; `.github/workflows/ai-doc-lint.yml` is manual-dispatch fallback
 - `.github/workflows/attest-merged-pr.yml` is a manually dispatched, exact-head qualification path for an already merged same-repository PR. Its read-only job checks the immutable PR identities and complete original Docpact diff; a separate status-only job attests success only after fresh PR identity verification. It does not replace data-science review, run candidate scripts, or publish dataset content.
+- `.github/workflows/dependency-pr.yml` separately validates automation/configuration PRs with read-only workflow lint and the existing identity-verifier unit tests. Actions-only monitoring and tool pins follow `docs/agents/dependency-updates.md`; these checks do not dispatch attestation or qualify dataset content.
 - For documentation-governance changes, run `scripts/docpact validate-config --root . --strict` and `scripts/docpact lint --root . --base origin/main --head HEAD --mode enforce`
 
 ## Hard Boundaries

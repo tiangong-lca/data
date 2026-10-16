@@ -1,8 +1,8 @@
 version: 1
 layout: repo
-lastReviewedAt: 2026-09-25
-lastReviewedCommit: 166fffd22b1510bb580d2697fa248a236c01c47c
-lastReviewedNote: "Reviewed for Data #40: the new trusted-main exact-merged-PR workflow and identity verifier are governed paths. It uses the existing checksum-pinned Docpact build for strict config and full original-diff lint; the separate status publisher does not execute candidate code. Dataset and release semantics are unchanged."
+lastReviewedAt: "2026-10-16"
+lastReviewedCommit: "c50cab7961e0b0ca11c26a600bd4c90fea6c6c32"
+lastReviewedNote: "Reviewed Data #43: Actions-only monitoring adds scoped read-only workflow lint and existing identity-verifier tests; exact merged-PR attestation, dataset/reference assets, digests, release retirement and integration requirements remain unchanged."
 
 catalog:
   repos:
@@ -13,6 +13,7 @@ catalog:
       workflowDocs:
         - docs/agents/repo-validation.md
         - docs/agents/repo-architecture.md
+        - docs/agents/dependency-updates.md
       workspaceIntegrationRequired: true
 
 ownership:
@@ -30,6 +31,8 @@ ownership:
           - .github/workflows/publish.yml
           - .github/workflows/ai-doc-lint.yml
           - .github/workflows/attest-merged-pr.yml
+          - .github/workflows/dependency-pr.yml
+          - .github/dependabot.yml
           - .github/scripts/attest_merged_pr.py
           - .github/scripts/test_attest_merged_pr.py
       ownerRepo: data
@@ -79,6 +82,8 @@ coverage:
     - .github/workflows/publish.yml
     - .github/workflows/ai-doc-lint.yml
     - .github/workflows/attest-merged-pr.yml
+    - .github/workflows/dependency-pr.yml
+    - .github/dependabot.yml
     - .github/scripts/attest_merged_pr.py
     - .github/scripts/test_attest_merged_pr.py
   exclude:
@@ -92,6 +97,11 @@ freshness:
 
 routing:
   intents:
+    dependency-maintenance:
+      paths:
+        - .github/dependabot.yml
+        - .github/workflows/dependency-pr.yml
+        - docs/agents/dependency-updates.md
     local-docpact-gate:
       paths:
         - .githooks/pre-push
@@ -145,12 +155,27 @@ docInventory:
     - .docpact/config.yaml
     - docs/agents/repo-validation.md
     - docs/agents/repo-architecture.md
+    - docs/agents/dependency-updates.md
 
 repo:
   id: data
   owner: data
 
 rules:
+  - id: data-dependency-monitoring-contract
+    scope: repo
+    repo: data
+    triggers:
+      - path: .github/dependabot.yml
+        kind: dependency-monitoring-config
+      - path: .github/workflows/dependency-pr.yml
+        kind: read-only-pr-validation
+      - path: docs/agents/dependency-updates.md
+        kind: dependency-maintainer-guide
+    requiredDocs:
+      - path: docs/agents/dependency-updates.md
+        mode: review_or_update
+    reason: Actions monitoring and scoped read-only workflow checks must match the focused maintainer guide without widening dataset, attestation or publication authority.
   - id: data-bootstrap-contract
     scope: repo
     repo: data
