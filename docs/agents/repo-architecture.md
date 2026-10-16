@@ -29,9 +29,9 @@ checkPaths:
   - scripts/build-docpact-0.1.9.sh
   - scripts/patches/docpact-0.1.9-rev-list-stdin.patch
   - scripts/install-git-hooks.sh
-lastReviewedAt: 2026-09-25
-lastReviewedCommit: 166fffd22b1510bb580d2697fa248a236c01c47c
-lastReviewedNote: "Reviewed for Data #40: exact-head merged-PR qualification remains repository CI governance. It does not alter dataset ownership, payload structure, reference assets, release policy, or workspace integration ownership."
+lastReviewedAt: 2026-10-16
+lastReviewedCommit: c50cab7961e0b0ca11c26a600bd4c90fea6c6c32
+lastReviewedNote: "Reviewed Data #43: Actions-only monitoring adds scoped read-only workflow lint and existing identity-verifier tests; exact merged-PR attestation, dataset/reference assets, digests, release retirement and integration requirements remain unchanged."
 related:
   - AGENTS.md
   - .docpact/config.yaml
@@ -75,3 +75,5 @@ A merged PR in this repository is repo-complete only. If the dataset snapshot mu
 This repository has a versioned local `pre-push` hook under `.githooks/pre-push` that delegates to `scripts/docpact-gate.sh`. The gate resolves the CLI through `scripts/docpact`, so local agent shells do not need bare `docpact` on `PATH`. The hook is a local developer guard for docpact config validation and enforced doc-governance linting; ordinary PRs and pushes rely on the local gate; `.github/workflows/ai-doc-lint.yml` is manual-dispatch fallback for remote reproduction.
 
 The temporary Docpact 0.1.9 build patch is governance tooling only. It does not change data package content or the retired release workflow.
+
+The separate read-only dependency workflow checks automation/configuration PRs with workflow lint and the existing identity-verifier unit tests. It executes no attestation, publication or dataset generation workflow; [the dependency guide](dependency-updates.md) owns its monitoring and validation details.

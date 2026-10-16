@@ -1,0 +1,47 @@
+name: Dependency workflow validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/dependabot.yml
+      - .github/workflows/**
+      - .github/scripts/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-workflow-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      ACTIONLINT_VERSION: 1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Install checksum-pinned actionlint
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/actionlint-linux-amd64.tar.gz"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+            --output "$archive"
+          printf '%s  %s\n' "$ACTIONLINT_SHA256" "$archive" | sha256sum --check --status
+          tar -xzf "$archive" -C "$RUNNER_TEMP" actionlint
+
+      - name: Validate workflow syntax and GitHub Actions contracts
+        run: '"$RUNNER_TEMP/actionlint" -shellcheck= -pyflakes='
+
+      - name: Test existing attestation identity verifier
+        run: python3 -m unittest discover -s .github/scripts -p 'test_attest_merged_pr.py' -v
